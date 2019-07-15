@@ -46,9 +46,6 @@
 
 #include "xf_event.h"
 
-
-
-
 #define TAG CLIENT_TAG("x11")
 
 #define CLAMP_COORDINATES(x, y) \
