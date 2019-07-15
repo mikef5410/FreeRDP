@@ -69,6 +69,9 @@
 #include <freerdp/log.h>
 #define TAG CLIENT_TAG("common")
 
+jigglerState_t jigglerState  __attribute__ ((visibility ("default")));
+
+
 static void set_default_callbacks(freerdp* instance)
 {
 	WINPR_ASSERT(instance);

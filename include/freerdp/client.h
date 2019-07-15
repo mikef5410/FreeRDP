@@ -308,12 +308,21 @@ extern "C"
 
 	FREERDP_API int freerdp_client_common_stop(rdpContext* context);
 
+
 	FREERDP_API BOOL freerdp_client_load_channels(freerdp* instance);
 
 #if defined(CHANNEL_ENCOMSP_CLIENT)
 	FREERDP_API BOOL freerdp_client_encomsp_toggle_control(EncomspClientContext* encomsp);
 	FREERDP_API BOOL freerdp_client_encomsp_set_control(EncomspClientContext* encomsp,
 	                                                    BOOL control);
+#ifdef WITH_MOUSE_JIGGLER
+        typedef struct jigglerState_t {
+          time_t expiry_time;
+          uint32_t idle_secs;
+          int x;
+          int y;
+        } jigglerState_t;
+        extern jigglerState_t jigglerState;
 #endif
 
 #ifdef __cplusplus

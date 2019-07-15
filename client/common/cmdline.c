@@ -5172,6 +5172,17 @@ static int freerdp_client_settings_parse_command_line_arguments_int(
 			if (!freerdp_settings_set_bool(settings, FreeRDP_MouseMotion, enable))
 				return fail_at(arg, COMMAND_LINE_ERROR);
 		}
+#ifdef WITH_MOUSE_JIGGLER                
+                CommandLineSwitchCase(arg, "mouse-jiggler")
+                  {
+                    LONGLONG val;
+                    if (!value_to_int(arg->Value, &val, 0, INT32_MAX)) {
+                      return COMMAND_LINE_ERROR_UNEXPECTED_VALUE;
+                    }
+                    jigglerState.idle_secs = (UINT32) val;
+                  }
+#endif
+                
 		CommandLineSwitchCase(arg, "parent-window")
 		{
 			ULONGLONG val = 0;

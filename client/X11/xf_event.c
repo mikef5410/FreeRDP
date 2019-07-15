@@ -22,6 +22,9 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#ifdef WITH_MOUSE_JIGGLER
+#include <time.h>
+#endif
 
 #include <string.h>
 #include <math.h>
@@ -43,18 +46,7 @@
 
 #include "xf_event.h"
 
-#define MOUSE_JIGGLER
 
-#ifdef MOUSE_JIGGLER
-#include <time.h>
-typedef struct jigglerState_t {
-  time_t expiry_time;
-  uint32_t idle_secs;
-  int x;
-  int y;
-} jigglerState_t;
-jigglerState_t jigglerState;
-#endif
 
 
 #define TAG CLIENT_TAG("x11")
@@ -465,9 +457,14 @@ BOOL xf_generic_MotionNotify(xfContext* xfc, int x, int y, int state, Window win
 	}
 
 	xf_event_adjust_coordinates(xfc, &x, &y);
+<<<<<<< HEAD
 	freerdp_client_send_button_event(&xfc->common, FALSE, PTR_FLAGS_MOVE, x, y);
 
 #ifdef MOUSE_JIGGLER
+=======
+	freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE, x, y);
+#ifdef WITH_MOUSE_JIGGLER
+>>>>>>> 4566f6789 (Add commandline option, and cmake build option for mouse jiggler)
         jigglerState.x=x;
         jigglerState.y=y;
         jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
@@ -494,7 +491,8 @@ BOOL xf_generic_RawMotionNotify(xfContext* xfc, int x, int y, Window window, BOO
 	return freerdp_client_send_button_event(&xfc->common, TRUE, PTR_FLAGS_MOVE, x, y);
 }
 
-#ifdef MOUSE_JIGGLER
+
+#ifdef WITH_MOUSE_JIGGLER
 void xf_do_jiggle(xfContext *xfc)
 {
   int tmp_x, tmp_y;
@@ -645,7 +643,8 @@ static BOOL xf_event_ButtonRelease(xfContext* xfc, const XButtonEvent* event, BO
 		return TRUE;
 	return xf_generic_ButtonEvent(xfc, event->x, event->y, event->button, event->window, app,
 	                              FALSE);
-#ifdef MOUSE_JIGGLER
+
+#ifdef WITH_MOUSE_JIGGLER
         jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
 #endif 
 }
@@ -682,8 +681,8 @@ static BOOL xf_event_KeyRelease(xfContext* xfc, const XKeyEvent* event, BOOL app
 	xf_keyboard_key_release(xfc, event, keysym);
 
 	XLookupString((XKeyEvent*) event, str, sizeof(str), &keysym, NULL);
-	xf_keyboard_key_release(xfc, event->xkey.keycode, keysym);
-#ifdef MOUSE_JIGGLER
+	xf_keyboard_key_release(xfc, event->keycode, keysym);
+#ifdef WITH_MOUSE_JIGGLER
         jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
 #endif
 	return TRUE;

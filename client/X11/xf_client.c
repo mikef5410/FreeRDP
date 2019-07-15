@@ -67,6 +67,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifdef WITH_MOUSE_JIGGLER
+#include <time.h>
+#endif
+
 #include <freerdp/freerdp.h>
 #include <freerdp/constants.h>
 #include <freerdp/codec/nsc.h>
@@ -109,6 +113,9 @@
 #define TAG CLIENT_TAG("x11")
 
 #define MIN_PIXEL_DIFF 0.001
+#ifdef WITH_MOUSE_JIGGLER
+extern void xf_do_jiggle(xfContext *xfc);
+#endif
 
 struct xf_exit_code_map_t
 {
@@ -166,18 +173,6 @@ static void xf_check_extensions(xfContext* context);
 static void xf_window_free(xfContext* xfc);
 static BOOL xf_get_pixmap_info(xfContext* xfc);
 
-#define MOUSE_JIGGLER
-#ifdef MOUSE_JIGGLER
-
-#include <time.h>
-typedef struct jigglerState_t {
-  time_t expiry_time;
-  uint32_t idle_secs;
-  int x;
-  int y;
-} jigglerState_t;
-extern jigglerState_t jigglerState;
-#endif
 
 #ifdef WITH_XRENDER
 static void xf_draw_screen_scaled(xfContext* xfc, int x, int y, int w, int h)
@@ -1603,8 +1598,9 @@ static DWORD WINAPI xf_client_thread(LPVOID param)
 	{
 		goto disconnect;
 	}
+
         inputEvent = xfc->x11event;
-#ifdef MOUSE_JIGGLER
+#ifdef WITH_MOUSE_JIGGLER
         jigglerState.idle_secs=60;
         jigglerState.expiry_time=time(NULL)+jigglerState.idle_secs;
 #endif        
@@ -1679,7 +1675,7 @@ static DWORD WINAPI xf_client_thread(LPVOID param)
 			timerEvent.now = GetTickCount64();
 			PubSub_OnTimer(context->pubSub, context, &timerEvent);
 		}
-#ifdef MOUSE_JIGGLER
+#ifdef WITH_MOUSE_JIGGLER
                 if (time(NULL) > jigglerState.expiry_time) {
                   xf_do_jiggle(xfc);
                 }

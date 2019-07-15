@@ -43,6 +43,7 @@ if(NOT WIN32)
     WITH_SANITIZE_THREAD "Compile with gcc/clang thread sanitizer." OFF
     "NOT WITH_VALGRIND_MEMCHECK; NOT WITH_SANITIZE_ADDRESS; NOT WITH_SANITIZE_MEMORY" OFF
   )
+  option(WITH_MOUSE_JIGGLER "Enable mouse jiggler support. (X11 only)" ON)
 else()
   if(NOT UWP)
     option(WITH_MEDIA_FOUNDATION "Enable H264 media foundation decoder." OFF)
