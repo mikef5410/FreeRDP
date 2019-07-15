@@ -1601,7 +1601,6 @@ static DWORD WINAPI xf_client_thread(LPVOID param)
 
         inputEvent = xfc->x11event;
 #ifdef WITH_MOUSE_JIGGLER
-        jigglerState.idle_secs=60;
         jigglerState.expiry_time=time(NULL)+jigglerState.idle_secs;
 #endif        
 	while (!freerdp_shall_disconnect_context(instance->context))
@@ -1676,7 +1675,7 @@ static DWORD WINAPI xf_client_thread(LPVOID param)
 			PubSub_OnTimer(context->pubSub, context, &timerEvent);
 		}
 #ifdef WITH_MOUSE_JIGGLER
-                if (time(NULL) > jigglerState.expiry_time) {
+                if ((jigglerState.idle_secs>0) && (time(NULL) > jigglerState.expiry_time)) {
                   xf_do_jiggle(xfc);
                 }
 #endif
