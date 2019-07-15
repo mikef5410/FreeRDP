@@ -166,6 +166,19 @@ static void xf_check_extensions(xfContext* context);
 static void xf_window_free(xfContext* xfc);
 static BOOL xf_get_pixmap_info(xfContext* xfc);
 
+#define MOUSE_JIGGLER
+#ifdef MOUSE_JIGGLER
+
+#include <time.h>
+typedef struct jigglerState_t {
+  time_t expiry_time;
+  uint32_t idle_secs;
+  int x;
+  int y;
+} jigglerState_t;
+extern jigglerState_t jigglerState;
+#endif
+
 #ifdef WITH_XRENDER
 static void xf_draw_screen_scaled(xfContext* xfc, int x, int y, int w, int h)
 {
@@ -1590,8 +1603,11 @@ static DWORD WINAPI xf_client_thread(LPVOID param)
 	{
 		goto disconnect;
 	}
-	inputEvent = xfc->x11event;
-
+        inputEvent = xfc->x11event;
+#ifdef MOUSE_JIGGLER
+        jigglerState.idle_secs=60;
+        jigglerState.expiry_time=time(NULL)+jigglerState.idle_secs;
+#endif        
 	while (!freerdp_shall_disconnect_context(instance->context))
 	{
 		HANDLE handles[MAXIMUM_WAIT_OBJECTS] = { 0 };
@@ -1663,6 +1679,11 @@ static DWORD WINAPI xf_client_thread(LPVOID param)
 			timerEvent.now = GetTickCount64();
 			PubSub_OnTimer(context->pubSub, context, &timerEvent);
 		}
+#ifdef MOUSE_JIGGLER
+                if (time(NULL) > jigglerState.expiry_time) {
+                  xf_do_jiggle(xfc);
+                }
+#endif
 	}
 
 	if (!exit_code)

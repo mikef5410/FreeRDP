@@ -43,6 +43,20 @@
 
 #include "xf_event.h"
 
+#define MOUSE_JIGGLER
+
+#ifdef MOUSE_JIGGLER
+#include <time.h>
+typedef struct jigglerState_t {
+  time_t expiry_time;
+  uint32_t idle_secs;
+  int x;
+  int y;
+} jigglerState_t;
+jigglerState_t jigglerState;
+#endif
+
+
 #define TAG CLIENT_TAG("x11")
 
 #define CLAMP_COORDINATES(x, y) \
@@ -453,6 +467,12 @@ BOOL xf_generic_MotionNotify(xfContext* xfc, int x, int y, int state, Window win
 	xf_event_adjust_coordinates(xfc, &x, &y);
 	freerdp_client_send_button_event(&xfc->common, FALSE, PTR_FLAGS_MOVE, x, y);
 
+#ifdef MOUSE_JIGGLER
+        jigglerState.x=x;
+        jigglerState.y=y;
+        jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
+#endif        
+        
 	if (xfc->fullscreen && !app)
 	{
 		XSetInputFocus(xfc->display, xfc->window->handle, RevertToPointerRoot, CurrentTime);
@@ -473,6 +493,26 @@ BOOL xf_generic_RawMotionNotify(xfContext* xfc, int x, int y, Window window, BOO
 
 	return freerdp_client_send_button_event(&xfc->common, TRUE, PTR_FLAGS_MOVE, x, y);
 }
+
+#ifdef MOUSE_JIGGLER
+void xf_do_jiggle(xfContext *xfc)
+{
+  int tmp_x, tmp_y;
+  rdpInput* input;
+  
+  input = xfc->context.input;
+  do {
+    tmp_x = jigglerState.x + (rand() & 63) - 32;
+    tmp_y = jigglerState.y + (rand() & 63) - 32;
+  } while (tmp_x < 0 || tmp_x > xfc->window->width ||
+           tmp_y < 0 || tmp_y > xfc->window->height);
+
+  freerdp_input_send_mouse_event(&xfc->common, TRUE, PTR_FLAGS_MOVE, tmp_x, tmp_y);
+  freerdp_input_send_mouse_event(&xfc->common, TRUE, PTR_FLAGS_MOVE, jigglerState.x, jigglerState.y);
+  jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
+}  
+#endif
+
 
 static BOOL xf_event_MotionNotify(xfContext* xfc, const XMotionEvent* event, BOOL app)
 {
@@ -605,6 +645,9 @@ static BOOL xf_event_ButtonRelease(xfContext* xfc, const XButtonEvent* event, BO
 		return TRUE;
 	return xf_generic_ButtonEvent(xfc, event->x, event->y, event->button, event->window, app,
 	                              FALSE);
+#ifdef MOUSE_JIGGLER
+        jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
+#endif 
 }
 
 static BOOL xf_event_KeyPress(xfContext* xfc, const XKeyEvent* event, BOOL app)
@@ -637,6 +680,12 @@ static BOOL xf_event_KeyRelease(xfContext* xfc, const XKeyEvent* event, BOOL app
 	WINPR_UNUSED(app);
 	XLookupString(cnv.ev, str, sizeof(str), &keysym, NULL);
 	xf_keyboard_key_release(xfc, event, keysym);
+
+	XLookupString((XKeyEvent*) event, str, sizeof(str), &keysym, NULL);
+	xf_keyboard_key_release(xfc, event->xkey.keycode, keysym);
+#ifdef MOUSE_JIGGLER
+        jigglerState.expiry_time=time(NULL) + jigglerState.idle_secs;
+#endif
 	return TRUE;
 }
 
