@@ -32,7 +32,7 @@
 #include <freerdp/primitives.h>
 
 #if defined(WITH_CAIRO)
-#include <cairo.h>
+#include <cairo/cairo.h>
 #endif
 
 #if defined(WITH_SWSCALE)
