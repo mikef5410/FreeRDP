@@ -315,6 +315,7 @@ extern "C"
 	FREERDP_API BOOL freerdp_client_encomsp_toggle_control(EncomspClientContext* encomsp);
 	FREERDP_API BOOL freerdp_client_encomsp_set_control(EncomspClientContext* encomsp,
 	                                                    BOOL control);
+#endif
 #ifdef WITH_MOUSE_JIGGLER
         typedef struct jigglerState_t {
           time_t expiry_time;
